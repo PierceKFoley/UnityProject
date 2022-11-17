@@ -6,9 +6,20 @@ public class CCMovement : MonoBehaviour
 {
     public Camera cam;
     public CharacterController characterController;
+    public Transform groundCheckTransform;
 
+    public LayerMask playerLayer;
     public float movementSpeed = 10f;
     public float mouseSensitivity = 1f;
+    /// <summary>
+    /// Amount of vertical force to add when jumping
+    /// </summary>
+    public float jumpForce = 5f;
+    /// <summary>
+    /// Amount the vertical force added by jumping is reduced every frame.
+    /// </summary>
+    public float jumpDecay = 0.1f;
+    public float gravityForce = -9.7f;
 
     private void Awake()
     {
@@ -21,16 +32,63 @@ public class CCMovement : MonoBehaviour
     }
 
     float xRot = 0f;
+    bool jump = false;
+    [SerializeField] bool grounded = false;
+    float verticalForce;
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireSphere(groundCheckTransform.position, .5f);
+    }
 
     void Update()
     {
+        if(groundCheckTransform != null)
+        {
+            Collider[] hits = Physics.OverlapSphere(groundCheckTransform.position, 0.5f, ~playerLayer);
+            if (hits.Length > 0)
+            {   
+                grounded = true;
+            } else
+            {
+                grounded = false;
+            }
+        }
+
         Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")) * mouseSensitivity;
 
         Vector2 mouseInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
 
+        if (Input.GetKeyUp(KeyCode.Space) && grounded)
+        {
+            jump = true;
+            verticalForce = jumpForce;
+        }
+
+        if(jump)
+        {
+            verticalForce -= jumpDecay;
+            if (verticalForce <= 0)
+                jump = false;
+        }
+        else
+        {
+            if(verticalForce > gravityForce)
+            {
+                verticalForce -= jumpDecay;
+            } else
+            {
+                verticalForce = gravityForce;
+            }
+        }
+
+        //print(verticalForce);
+
         transform.Rotate(new Vector3(0, mouseInput.x));
 
-        characterController.Move((transform.right * input.x + transform.forward * input.y).normalized * movementSpeed * Time.deltaTime);
+        Vector3 movement = (transform.right * input.x + transform.forward * input.y).normalized * movementSpeed;
+        
+        characterController.Move(new Vector3(movement.x, verticalForce, movement.z) * Time.deltaTime);
 
         // Camera Rotation
         xRot -= mouseInput.y;
