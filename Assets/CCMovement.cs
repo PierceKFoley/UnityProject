@@ -21,6 +21,8 @@ public class CCMovement : MonoBehaviour
     public float jumpDecay = 0.1f;
     public float gravityForce = -9.7f;
 
+    public bool enableCam = true; 
+
     private void Awake()
     {
         characterController = GetComponent<CharacterController>();    
@@ -58,8 +60,8 @@ public class CCMovement : MonoBehaviour
         Vector2 input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")) * mouseSensitivity;
 
         Vector2 mouseInput = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-
-        if (Input.GetKeyUp(KeyCode.Space) && grounded)
+        
+        if (Input.GetKeyDown(KeyCode.Space) && grounded)
         {
             jump = true;
             verticalForce = jumpForce;
@@ -84,17 +86,21 @@ public class CCMovement : MonoBehaviour
 
         //print(verticalForce);
 
-        transform.Rotate(new Vector3(0, mouseInput.x));
-
         Vector3 movement = (transform.right * input.x + transform.forward * input.y).normalized * movementSpeed;
         
         characterController.Move(new Vector3(movement.x, verticalForce, movement.z) * Time.deltaTime);
 
-        // Camera Rotation
-        xRot -= mouseInput.y;
+        // Rotation
+        if (enableCam)
+        {
+            transform.Rotate(new Vector3(0, mouseInput.x));
 
-        xRot = Mathf.Clamp(xRot, -90f, 90f);
+            xRot -= mouseInput.y;
 
-        cam.transform.localRotation = Quaternion.Euler(xRot, 0f, 0f);
+            xRot = Mathf.Clamp(xRot, -90f, 90f);
+
+            cam.transform.localRotation = Quaternion.Euler(xRot, 0f, 0f);
+        }
+        
     }
 }
