@@ -7,6 +7,8 @@ public class CInventory : MonoBehaviour
     public List<Item> _inventory = new List<Item>();
     private Dictionary<int, int> _itemQuantity = new Dictionary<int, int>();
 
+    public InventoryUI UI;
+
     public void AddItem(Item item, int quantity = 1)
     {
         if (quantity < 1)
@@ -21,6 +23,11 @@ public class CInventory : MonoBehaviour
         } else
         {
             _itemQuantity[item.id] = quantity;
+        }
+
+        if(UI != null)
+        {
+            UI.AddItem(item);
         }
     }
 }
